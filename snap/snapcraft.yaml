@@ -31,6 +31,8 @@ layout:
 parts:  
   all-clusters:
     plugin: nil
+    build-environment:
+      - PACKAGE_VERSION: snap
     source: https://github.com/project-chip/connectedhomeip.git
     source-depth: 1
     source-tag: master
@@ -41,9 +43,9 @@ parts:
       # Shallow clone the submodules
       scripts/checkout_submodules.py --shallow --platform linux
 
-      # Set the snap version
-      SHORT_HASH=$(git rev-parse --short HEAD)
-      craftctl set version=$SHORT_HASH+snap
+      # prefix the snap version with the upstream tag, or fall back to the commit hash
+      UPSTREAM_VERSION=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
+      craftctl set version=$UPSTREAM_VERSION+$PACKAGE_VERSION
 
     override-build: |
       # The project writes its data to /tmp which isn't persisted.
