@@ -16,7 +16,6 @@ env:
 
 jobs:
   build-amd64:
-    if: github.ref == 'refs/heads/main'
     outputs:
       snap: ${{ steps.snapcraft.outputs.snap }}
     runs-on: ubuntu-latest
@@ -36,6 +35,7 @@ jobs:
           if-no-files-found: error
 
   publish-amd64:
+    # Only publish if we are on the main branch
     if: github.ref == 'refs/heads/main'
     needs: build-amd64
     runs-on: ubuntu-latest
@@ -80,6 +80,7 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
 
   publish-arm64:
+    # Only publish if we are on the main branch
     if: github.ref == 'refs/heads/main'
     needs: [build-arm64]
     runs-on: ubuntu-latest
