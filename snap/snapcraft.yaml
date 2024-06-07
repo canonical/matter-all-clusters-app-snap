@@ -32,7 +32,7 @@ parts:
   all-clusters:
     plugin: nil
     build-environment:
-      - PACKAGE_VERSION: snap
+      - BUILD_METADATA: snap
     source: https://github.com/project-chip/connectedhomeip.git
     source-depth: 1
     source-tag: master
@@ -45,7 +45,7 @@ parts:
 
       # prefix the snap version with the upstream tag, or fall back to the commit hash
       UPSTREAM_VERSION=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
-      craftctl set version=$UPSTREAM_VERSION+$PACKAGE_VERSION
+      craftctl set version=$UPSTREAM_VERSION+$BUILD_METADATA
 
     override-build: |
       # The project writes its data to /tmp which isn't persisted.
