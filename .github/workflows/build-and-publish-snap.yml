@@ -48,7 +48,7 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
         with:
           snap: ${{ needs.build-amd64.outputs.snap }}
-          release: edge/ieng-1031
+          release: edge/feature/ieng-1031_test&very
 
   build-arm64:
     # We do not start the long running arm64 build unless the amd64 build has passed.
