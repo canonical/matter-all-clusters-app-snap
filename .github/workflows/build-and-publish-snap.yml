@@ -16,6 +16,7 @@ env:
 
 jobs:
   build-amd64:
+    if: github.ref == 'refs/heads/main'
     outputs:
       snap: ${{ steps.snapcraft.outputs.snap }}
     runs-on: ubuntu-latest
@@ -35,6 +36,7 @@ jobs:
           if-no-files-found: error
 
   publish-amd64:
+    if: github.ref == 'refs/heads/main'
     needs: build-amd64
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +50,7 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
         with:
           snap: ${{ needs.build-amd64.outputs.snap }}
-          release: edge/feature/ieng-1031_test&very
+          release: latest/edge
 
   build-arm64:
     # We do not start the long running arm64 build unless the amd64 build has passed.
@@ -78,6 +80,7 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
 
   publish-arm64:
+    if: github.ref == 'refs/heads/main'
     needs: [build-arm64]
     runs-on: ubuntu-latest
     steps:
@@ -91,5 +94,5 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
         with:
           snap: ${{ needs.build-arm64.outputs.snap }}
-          release: edge/ieng-1031
+          release: latest/edge
 
