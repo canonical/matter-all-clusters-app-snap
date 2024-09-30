@@ -1,5 +1,4 @@
-name: Build and publish snap
-
+name: Snap CI
 on:
   schedule:
     - cron: "20 2 * * 1"  # Monday morning 02:20 UTC
