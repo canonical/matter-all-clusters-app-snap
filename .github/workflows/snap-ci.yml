@@ -1,23 +1,28 @@
 name: Snap CI
 on:
   schedule:
-    - cron: "20 2 * * 1"  # Monday morning 02:20 UTC
+    - cron: "20 2 * * 1" # Monday mornings at 02:20 UTC
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   # Allow manual trigger
   workflow_dispatch:
 
 env:
-  ARTIFACT_AMD64: matter-all-clusters-app_${{ github.run_number}}_amd64
-  ARTIFACT_ARM64: matter-all-clusters-app_${{ github.run_number}}_arm64
+  SNAP_NAME: matter-all-clusters-app
 
 jobs:
-  build-amd64:
-    outputs:
-      snap: ${{ steps.snapcraft.outputs.snap }}
-    runs-on: ubuntu-latest
+  matrix-build:
+    strategy:
+      matrix:
+        runs:
+          - architecture: amd64
+            runner: ubuntu-latest
+          - architecture: arm64
+            runner: [self-hosted, ARM64, Linux]
+    runs-on: ${{ matrix.runs.runner }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,70 +34,14 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_AMD64 }}
+          name: ${{env.SNAP_NAME}}_${{github.run_number}}_${{matrix.runs.architecture}}
           path: ${{ steps.snapcraft.outputs.snap }}
           if-no-files-found: error
 
-  publish-amd64:
-    # Only publish if we are on the main branch
-    if: github.ref == 'refs/heads/main'
-    needs: build-amd64
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download locally built snap
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_AMD64 }}
-
       - uses: snapcore/action-publish@v1
+        # if: github.ref == 'refs/heads/main'
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
         with:
-          snap: ${{ needs.build-amd64.outputs.snap }}
-          release: latest/edge
-
-  build-arm64:
-    # We do not start the long running arm64 build unless the amd64 build has passed.
-    needs: build-amd64
-    outputs:
-      snap: ${{ steps.snapcraft.outputs.snap }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
-      - name: Build snap
-        uses: diddlesnaps/snapcraft-multiarch-action@v1
-        id: snapcraft
-        with:
-          architecture: arm64
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_ARM64 }}
-          path: ${{ steps.snapcraft.outputs.snap }}
-
-  publish-arm64:
-    # Only publish if we are on the main branch
-    if: github.ref == 'refs/heads/main'
-    needs: [build-arm64]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download locally built snap
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_ARM64 }}
-
-      - uses: snapcore/action-publish@v1
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
-        with:
-          snap: ${{ needs.build-arm64.outputs.snap }}
-          release: latest/edge
-
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: latest/edge/test
