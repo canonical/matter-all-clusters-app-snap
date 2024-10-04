@@ -13,7 +13,8 @@ env:
   SNAP_NAME: matter-all-clusters-app
 
 jobs:
-  matrix-build:
+  build:
+    name: Build, Publish
     strategy:
       matrix:
         runs:
@@ -38,7 +39,8 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
           if-no-files-found: error
 
-      - uses: snapcore/action-publish@v1
+      - name: Publish snap to edge
+        uses: snapcore/action-publish@v1
         # if: github.ref == 'refs/heads/main'
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
