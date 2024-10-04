@@ -41,9 +41,9 @@ jobs:
 
       - name: Publish snap to edge
         uses: snapcore/action-publish@v1
-        # if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
         with:
           snap: ${{ steps.snapcraft.outputs.snap }}
-          release: latest/edge/test
+          release: latest/edge
