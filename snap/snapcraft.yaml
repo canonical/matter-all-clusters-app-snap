@@ -7,7 +7,7 @@ adopt-info: all-clusters
 
 license: Apache-2.0
 
-grade: devel
+grade: stable
 confinement: strict
 
 base: core22
