@@ -1,4 +1,4 @@
-package thread_tests
+package remote
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"chip-tool-snap-tests/matter"
 	"github.com/canonical/matter-snap-testing/utils"
 	"golang.org/x/crypto/ssh"
 )
@@ -16,41 +17,41 @@ var (
 	remoteUser           = ""
 	remotePassword       = ""
 	remoteHost           = ""
-	remoteInfraInterface = defaultInfraInterfaceValue
-	remoteRadioUrl       = defaultRadioUrl
+	remoteInfraInterface = matter.DefaultInfraInterfaceValue
+	remoteRadioUrl       = matter.DefaultRadioUrl
 
 	SSHClient *ssh.Client
 )
 
-func remote_setup(t *testing.T) {
-	remote_loadEnvVars()
+func Setup(t *testing.T) {
+	loadEnvVars()
 
 	connectSSH(t)
 
-	remote_deployOTBRAgent(t)
+	deployOTBRAgent(t)
 
-	remote_deployAllClustersApp(t)
+	deployAllClustersApp(t)
 }
 
-func remote_loadEnvVars() {
+func loadEnvVars() {
 
-	if v := os.Getenv(remoteUserEnv); v != "" {
+	if v := os.Getenv(matter.RemoteUserEnv); v != "" {
 		remoteUser = v
 	}
 
-	if v := os.Getenv(remotePasswordEnv); v != "" {
+	if v := os.Getenv(matter.RemotePasswordEnv); v != "" {
 		remotePassword = v
 	}
 
-	if v := os.Getenv(remoteHostEnv); v != "" {
+	if v := os.Getenv(matter.RemoteHostEnv); v != "" {
 		remoteHost = v
 	}
 
-	if v := os.Getenv(remoteInfraInterfaceEnv); v != "" {
+	if v := os.Getenv(matter.RemoteInfraInterfaceEnv); v != "" {
 		remoteInfraInterface = v
 	}
 
-	if v := os.Getenv(remoteRadioUrlEnv); v != "" {
+	if v := os.Getenv(matter.RemoteRadioUrlEnv); v != "" {
 		remoteRadioUrl = v
 	}
 }
@@ -82,19 +83,19 @@ func connectSSH(t *testing.T) {
 	t.Logf("SSH: connected to %s", remoteHost)
 }
 
-func remote_deployOTBRAgent(t *testing.T) {
+func deployOTBRAgent(t *testing.T) {
 	start := time.Now().UTC()
 
 	t.Cleanup(func() {
-		dumpRemoteLogs(t, "openthread-border-router", start)
-		remote_exec(t, "sudo snap remove --purge openthread-border-router")
+		dumpLogs(t, "openthread-border-router", start)
+		exec(t, "sudo snap remove --purge openthread-border-router")
 	})
 
 	commands := []string{
 		"sudo snap remove --purge openthread-border-router",
 		"sudo snap install openthread-border-router --channel=latest/beta",
-		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", infraInterfaceKey, remoteInfraInterface),
-		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", radioUrlKey, remoteRadioUrl),
+		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", matter.InfraInterfaceKey, remoteInfraInterface),
+		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", matter.RadioUrlKey, remoteRadioUrl),
 		// "sudo snap connect openthread-border-router:avahi-control",
 		"sudo snap connect openthread-border-router:firewall-control",
 		"sudo snap connect openthread-border-router:raw-usb",
@@ -104,19 +105,19 @@ func remote_deployOTBRAgent(t *testing.T) {
 		"sudo snap start openthread-border-router",
 	}
 	for _, cmd := range commands {
-		remote_exec(t, cmd)
+		exec(t, cmd)
 	}
 
-	remote_waitForLogMessage(t, otbrSnap, "Start Thread Border Agent: OK", start)
+	WaitForLogMessage(t, matter.OtbrSnap, "Start Thread Border Agent: OK", start)
 	t.Log("OTBR on remote device is ready")
 }
 
-func remote_deployAllClustersApp(t *testing.T) {
+func deployAllClustersApp(t *testing.T) {
 	start := time.Now().UTC()
 
 	t.Cleanup(func() {
-		dumpRemoteLogs(t, "matter-all-clusters-app", start)
-		remote_exec(t, "sudo snap remove --purge matter-all-clusters-app")
+		dumpLogs(t, "matter-all-clusters-app", start)
+		exec(t, "sudo snap remove --purge matter-all-clusters-app")
 	})
 
 	commands := []string{
@@ -130,14 +131,14 @@ func remote_deployAllClustersApp(t *testing.T) {
 		"sudo snap start matter-all-clusters-app",
 	}
 	for _, cmd := range commands {
-		remote_exec(t, cmd)
+		exec(t, cmd)
 	}
 
-	remote_waitForLogMessage(t, "matter-all-clusters-app", "CHIP minimal mDNS started advertising", start)
+	WaitForLogMessage(t, "matter-all-clusters-app", "CHIP minimal mDNS started advertising", start)
 	t.Log("Matter All Clusters App is ready")
 }
 
-func remote_exec(t *testing.T, command string) string {
+func exec(t *testing.T, command string) string {
 	t.Helper()
 
 	t.Logf("[exec-ssh] %s", command)
@@ -179,7 +180,7 @@ func remote_exec(t *testing.T, command string) string {
 	return string(output)
 }
 
-func remote_waitForLogMessage(t *testing.T, snap string, expectedLog string, start time.Time) {
+func WaitForLogMessage(t *testing.T, snap string, expectedLog string, start time.Time) {
 	t.Helper()
 
 	const maxRetry = 10
@@ -188,7 +189,7 @@ func remote_waitForLogMessage(t *testing.T, snap string, expectedLog string, sta
 		t.Logf("Retry %d/%d: Waiting for expected content in logs: '%s'", i, maxRetry, expectedLog)
 
 		command := fmt.Sprintf("sudo journalctl --utc --since \"%s\" --no-pager | grep \"%s\"|| true", start.UTC().Format("2006-01-02 15:04:05"), snap)
-		logs := remote_exec(t, command)
+		logs := exec(t, command)
 		if strings.Contains(logs, expectedLog) {
 			t.Logf("Found expected content in logs: '%s'", expectedLog)
 			return
@@ -196,12 +197,12 @@ func remote_waitForLogMessage(t *testing.T, snap string, expectedLog string, sta
 	}
 
 	t.Logf("Time out: reached max %d retries.", maxRetry)
-	t.Log(remote_exec(t, "journalctl --no-pager --lines=10 --unit=snap.openthread-border-router.otbr-agent --priority=notice"))
+	t.Log(exec(t, "journalctl --no-pager --lines=10 --unit=snap.openthread-border-router.otbr-agent --priority=notice"))
 	t.FailNow()
 }
 
-func dumpRemoteLogs(t *testing.T, label string, start time.Time) error {
+func dumpLogs(t *testing.T, label string, start time.Time) error {
 	command := fmt.Sprintf("sudo journalctl --utc --since \"%s\" --no-pager | grep \"%s\"|| true", start.UTC().Format("2006-01-02 15:04:05"), label)
-	logs := remote_exec(t, command)
+	logs := exec(t, command)
 	return utils.WriteLogFile(t, "remote-"+label, logs)
 }

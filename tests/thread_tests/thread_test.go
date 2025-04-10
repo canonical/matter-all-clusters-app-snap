@@ -4,16 +4,19 @@ import (
 	"testing"
 	"time"
 
+	"chip-tool-snap-tests/local"
+	"chip-tool-snap-tests/remote"
 	"github.com/canonical/matter-snap-testing/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAllClustersAppThread(t *testing.T) {
-	setup(t)
+	// Install ChipTool and OTBR, conf and start
+	local.Setup(t)
 
-	trimmedActiveDataset := getActiveDataset(t)
+	trimmedActiveDataset := local.GetActiveDataset(t)
 
-	remote_setup(t)
+	remote.Setup(t)
 
 	t.Run("Commission", func(t *testing.T) {
 		stdout, _, _ := utils.Exec(t, "chip-tool pairing code-thread 110 hex:"+trimmedActiveDataset+" 34970112332 2>&1")
@@ -30,7 +33,7 @@ func TestAllClustersAppThread(t *testing.T) {
 		// 0x6 is the Matter Cluster ID for on-off
 		// Using cluster ID here because of a buffering issue in the log stream:
 		// https://github.com/canonical/chip-tool-snap/pull/69#issuecomment-2209530275
-		remote_waitForLogMessage(t, "matter-all-clusters-app", "ClusterId = 0x6", start)
+		remote.WaitForLogMessage(t, "matter-all-clusters-app", "ClusterId = 0x6", start)
 	})
 
 }
