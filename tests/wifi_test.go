@@ -6,28 +6,37 @@ import (
 
 	"github.com/canonical/matter-snap-testing/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAllClustersAppWiFi(t *testing.T) {
-	InstallChipTool(t)
+	// Start clean
+	utils.SnapRemove(t, chipToolSnap)
+	utils.SnapRemove(t, allClustersSnap)
 
+	// Set start time for capturing logs after removal, before installing version to test
 	start := time.Now()
 
-	// Start clean
-	utils.SnapRemove(t, allClustersSnap)
+	// Install stable chip tool from store
+	require.NoError(t, utils.SnapInstallFromStore(t, chipToolSnap, "latest/stable"))
+
+	t.Cleanup(func() {
+		utils.SnapDumpLogs(t, start, chipToolSnap)
+		utils.SnapRemove(t, chipToolSnap)
+	})
+
+	// Install all clusters app
+	installAllClusters(t)
 
 	t.Cleanup(func() {
 		utils.SnapDumpLogs(t, start, allClustersSnap)
 		utils.SnapRemove(t, allClustersSnap)
 	})
 
-	// Install all clusters app
-	utils.SnapInstallFromStore(t, allClustersSnap, "latest/beta")
-
 	// Setup all clusters app
 	utils.SnapSet(t, allClustersSnap, "args", "--wifi")
-	utils.SnapConnect(t, allClustersSnap+":avahi-control", "")
-	utils.SnapConnect(t, allClustersSnap+":bluez", "")
+	require.NoError(t, utils.SnapConnect(t, allClustersSnap+":avahi-control", ""))
+	require.NoError(t, utils.SnapConnect(t, allClustersSnap+":bluez", ""))
 
 	// Start all clusters app
 	utils.SnapStart(t, allClustersSnap)

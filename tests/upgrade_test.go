@@ -5,42 +5,38 @@ import (
 	"testing"
 	"time"
 
-	"github.com/canonical/matter-snap-testing/env"
 	"github.com/canonical/matter-snap-testing/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestUpgrade(t *testing.T) {
+func TestUpgrade(t *testing.T) { // Start clean
+	utils.SnapRemove(t, chipToolSnap)
+	utils.SnapRemove(t, allClustersSnap)
+
+	// Set start time for capturing logs after removal, before installing version to test
 	start := time.Now()
+
+	// Install stable chip tool from store
+	require.NoError(t, utils.SnapInstallFromStore(t, chipToolSnap, "latest/stable"))
+
+	t.Cleanup(func() {
+		utils.SnapDumpLogs(t, start, chipToolSnap)
+		utils.SnapRemove(t, chipToolSnap)
+	})
+
+	// Install all clusters app stable
+	require.NoError(t, utils.SnapInstallFromStore(t, allClustersSnap, "latest/stable"))
 
 	t.Cleanup(func() {
 		utils.SnapDumpLogs(t, start, allClustersSnap)
-		utils.SnapDumpLogs(t, start, chipToolSnap)
-
-		// Remove snaps, ignoring errors during removal
-		utils.SnapRemove(nil, allClustersSnap)
-		utils.SnapRemove(nil, chipToolSnap)
+		utils.SnapRemove(t, allClustersSnap)
 	})
-
-	// Start clean
-	utils.SnapRemove(t, allClustersSnap)
-	utils.SnapRemove(t, chipToolSnap)
-
-	// Install stable chip tool from store
-	utils.SnapInstallFromStore(t, chipToolSnap, "latest/stable")
-
-	// Setup chip-tool
-	utils.SnapConnect(t, chipToolSnap+":avahi-observe", "")
-	utils.SnapConnect(t, chipToolSnap+":bluez", "")
-	utils.SnapConnect(t, chipToolSnap+":process-control", "")
-
-	// Install all clusters app
-	utils.SnapInstallFromStore(t, allClustersSnap, "latest/beta")
 
 	// Setup all clusters app
 	utils.SnapSet(t, allClustersSnap, "args", "--wifi")
-	utils.SnapConnect(t, allClustersSnap+":avahi-control", "")
-	utils.SnapConnect(t, allClustersSnap+":bluez", "")
+	require.NoError(t, utils.SnapConnect(t, allClustersSnap+":avahi-control", ""))
+	require.NoError(t, utils.SnapConnect(t, allClustersSnap+":bluez", ""))
 
 	// Start all clusters app
 	utils.SnapStart(t, allClustersSnap)
@@ -53,9 +49,9 @@ func TestUpgrade(t *testing.T) {
 	})
 
 	t.Run("Control before upgrade", func(t *testing.T) {
-		snapVersion := utils.SnapVersion(t, chipToolSnap)
-		snapRevision := utils.SnapRevision(t, chipToolSnap)
-		log.Printf("%s installed version %s build %s\n", chipToolSnap, snapVersion, snapRevision)
+		snapVersion := utils.SnapVersion(t, allClustersSnap)
+		snapRevision := utils.SnapRevision(t, allClustersSnap)
+		log.Printf("%s installed version %s build %s\n", allClustersSnap, snapVersion, snapRevision)
 
 		start := time.Now()
 		stdout, _, _ := utils.Exec(t, "chip-tool onoff on 110 1 2>&1")
@@ -65,17 +61,13 @@ func TestUpgrade(t *testing.T) {
 	})
 
 	t.Run("Upgrade snap", func(t *testing.T) {
-		if env.SnapPath() != "" {
-			utils.SnapInstallFromFile(t, env.SnapPath())
-		} else {
-			utils.SnapRefresh(t, chipToolSnap, "latest/edge")
-		}
+		upgradeAllClusters(t)
 	})
 
 	t.Run("Control after upgrade", func(t *testing.T) {
-		snapVersion := utils.SnapVersion(t, chipToolSnap)
-		snapRevision := utils.SnapRevision(t, chipToolSnap)
-		log.Printf("%s installed version %s build %s\n", chipToolSnap, snapVersion, snapRevision)
+		snapVersion := utils.SnapVersion(t, allClustersSnap)
+		snapRevision := utils.SnapRevision(t, allClustersSnap)
+		log.Printf("%s installed version %s build %s\n", allClustersSnap, snapVersion, snapRevision)
 
 		start := time.Now()
 		stdout, _, _ := utils.Exec(t, "chip-tool onoff off 110 1 2>&1")

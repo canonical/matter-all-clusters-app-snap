@@ -12,31 +12,26 @@ import (
 const allClustersSnap = "matter-all-clusters-app"
 const chipToolSnap = "chip-tool"
 
-func InstallChipTool(t *testing.T) {
-	start := time.Now()
-
-	// clean
-	utils.SnapRemove(t, chipToolSnap)
-
+func installAllClusters(t *testing.T) {
 	if env.SnapPath() != "" {
 		require.NoError(t,
 			utils.SnapInstallFromFile(nil, env.SnapPath()),
 		)
 	} else {
 		require.NoError(t,
-			utils.SnapInstallFromStore(nil, chipToolSnap, env.SnapChannel()),
+			utils.SnapInstallFromStore(nil, allClustersSnap, env.SnapChannel()),
 		)
 	}
-	t.Cleanup(func() {
-		utils.SnapRemove(t, chipToolSnap)
-		logs := utils.SnapLogs(t, start, chipToolSnap)
-		utils.WriteLogFile(t, chipToolSnap, logs)
-	})
+}
 
-	// connect interfaces
-	utils.SnapConnect(t, chipToolSnap+":avahi-observe", "")
-	utils.SnapConnect(t, chipToolSnap+":bluez", "")
-	utils.SnapConnect(t, chipToolSnap+":process-control", "")
+func upgradeAllClusters(t *testing.T) {
+	if env.SnapPath() != "" {
+		require.NoError(t,
+			utils.SnapInstallFromFile(t, env.SnapPath()),
+		)
+	} else {
+		utils.SnapRefresh(t, allClustersSnap, "latest/edge")
+	}
 }
 
 func waitForOnOffHandlingByAllClustersApp(t *testing.T, start time.Time) {
