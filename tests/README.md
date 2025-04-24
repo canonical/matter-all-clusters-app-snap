@@ -1,4 +1,4 @@
-# Run Tests
+# Run tests
 
 ```bash
 go test -v -failfast -count 1
@@ -10,7 +10,7 @@ where:
 - `-failfast` makes the test stop after first failure
 - `-count 1` is to avoid Go test caching for example when testing a rebuilt snap
 
-### Generic Environment Variables
+### Generic environment variables
 
 Environment variables can modify the test functionality. Refer to these in
 [the documentation](https://pkg.go.dev/github.com/canonical/matter-snap-testing/env)

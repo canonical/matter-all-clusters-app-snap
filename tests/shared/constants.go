@@ -1,4 +1,4 @@
-package matter
+package shared
 
 const (
 	AllClustersSnap = "matter-all-clusters-app"

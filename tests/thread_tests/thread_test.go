@@ -4,14 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"chip-tool-snap-tests/local"
-	"chip-tool-snap-tests/remote"
+	"all-clusters-tests/local"
+	"all-clusters-tests/remote"
 	"github.com/canonical/matter-snap-testing/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAllClustersAppThread(t *testing.T) {
-	// Install ChipTool and OTBR, conf and start
 	local.Setup(t)
 
 	trimmedActiveDataset := local.GetActiveDataset(t)

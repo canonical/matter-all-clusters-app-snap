@@ -1,4 +1,4 @@
-module chip-tool-snap-tests
+module all-clusters-tests
 
 go 1.22.1
 

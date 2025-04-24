@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"chip-tool-snap-tests/matter"
+	"all-clusters-tests/shared"
 	"github.com/canonical/matter-snap-testing/utils"
 	"golang.org/x/crypto/ssh"
 )
@@ -17,8 +17,8 @@ var (
 	remoteUser           = ""
 	remotePassword       = ""
 	remoteHost           = ""
-	remoteInfraInterface = matter.DefaultInfraInterfaceValue
-	remoteRadioUrl       = matter.DefaultRadioUrl
+	remoteInfraInterface = shared.DefaultInfraInterfaceValue
+	remoteRadioUrl       = shared.DefaultRadioUrl
 
 	SSHClient *ssh.Client
 )
@@ -35,23 +35,23 @@ func Setup(t *testing.T) {
 
 func loadEnvVars() {
 
-	if v := os.Getenv(matter.RemoteUserEnv); v != "" {
+	if v := os.Getenv(shared.RemoteUserEnv); v != "" {
 		remoteUser = v
 	}
 
-	if v := os.Getenv(matter.RemotePasswordEnv); v != "" {
+	if v := os.Getenv(shared.RemotePasswordEnv); v != "" {
 		remotePassword = v
 	}
 
-	if v := os.Getenv(matter.RemoteHostEnv); v != "" {
+	if v := os.Getenv(shared.RemoteHostEnv); v != "" {
 		remoteHost = v
 	}
 
-	if v := os.Getenv(matter.RemoteInfraInterfaceEnv); v != "" {
+	if v := os.Getenv(shared.RemoteInfraInterfaceEnv); v != "" {
 		remoteInfraInterface = v
 	}
 
-	if v := os.Getenv(matter.RemoteRadioUrlEnv); v != "" {
+	if v := os.Getenv(shared.RemoteRadioUrlEnv); v != "" {
 		remoteRadioUrl = v
 	}
 }
@@ -94,8 +94,8 @@ func deployOTBRAgent(t *testing.T) {
 	commands := []string{
 		"sudo snap remove --purge openthread-border-router",
 		"sudo snap install openthread-border-router --channel=latest/beta",
-		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", matter.InfraInterfaceKey, remoteInfraInterface),
-		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", matter.RadioUrlKey, remoteRadioUrl),
+		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", shared.InfraInterfaceKey, remoteInfraInterface),
+		fmt.Sprintf("sudo snap set openthread-border-router %s='%s'", shared.RadioUrlKey, remoteRadioUrl),
 		// "sudo snap connect openthread-border-router:avahi-control",
 		"sudo snap connect openthread-border-router:firewall-control",
 		"sudo snap connect openthread-border-router:raw-usb",
@@ -108,7 +108,7 @@ func deployOTBRAgent(t *testing.T) {
 		exec(t, cmd)
 	}
 
-	WaitForLogMessage(t, matter.OtbrSnap, "Start Thread Border Agent: OK", start)
+	WaitForLogMessage(t, shared.OtbrSnap, "Start Thread Border Agent: OK", start)
 	t.Log("OTBR on remote device is ready")
 }
 
