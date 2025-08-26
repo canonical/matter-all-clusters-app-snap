@@ -35,7 +35,7 @@ parts:
       - BUILD_METADATA: snap
     source: https://github.com/project-chip/connectedhomeip.git
     source-depth: 1
-    source-tag: master
+    source-tag: v1.4.2.0
     source-submodules: []
     override-pull: |
       craftctl default
