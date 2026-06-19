@@ -9,6 +9,11 @@ on:
   # Allow manual trigger
   workflow_dispatch:
 
+# Keep one CICD run active at a time so publish/test/promote happen in order
+concurrency:
+  group: ${{ github.workflow }}
+  queue: max
+
 env:
   SNAP_NAME: matter-all-clusters-app
 
@@ -19,9 +24,9 @@ jobs:
       matrix:
         runs:
           - architecture: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - architecture: arm64
-            runner: [self-hosted, ARM64, Linux]
+            runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runs.runner }}
 
     steps:

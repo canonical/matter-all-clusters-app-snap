@@ -10,10 +10,10 @@ license: Apache-2.0
 grade: stable
 confinement: strict
 
-base: core22
-architectures:
-  - build-on: amd64
-  - build-on: arm64
+base: core24
+platforms:
+  amd64:
+  arm64:
 
 
 plugs:
@@ -91,6 +91,13 @@ parts:
       - libcairo2-dev
       - libreadline-dev
       - generate-ninja
+      - libevent-dev
+
+  runtime-dependencies:
+    plugin: nil
+    stage-packages:
+      - libevent-core-2.1-7t64
+      - libevent-pthreads-2.1-7t64
 
   local-bin:
     plugin: nil
