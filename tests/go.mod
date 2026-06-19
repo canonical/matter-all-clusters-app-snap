@@ -1,7 +1,8 @@
 module all-clusters-tests
 
-go 1.22.1
-toolchain go1.24.1
+go 1.23.0
+
+toolchain go1.24.6
 
 require (
 	github.com/canonical/matter-snap-testing v1.0.0-beta.6
